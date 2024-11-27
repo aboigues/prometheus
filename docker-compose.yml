@@ -7,31 +7,34 @@ services:
       replicas: 1
       placement:
         constraints:
-          - node.role == manager
+          - node.role == manager  # Prometheus doit tourner sur un nœud manager
       restart_policy:
         condition: on-failure
     ports:
-      - "9090:9090"
+      - "9090:9090"  # Port Prometheus
     volumes:
-      - prometheus_data:/prometheus
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus  # Données persistance de Prometheus
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro  # Configuration en lecture seule
+    networks:
+      - monitoring
 
   node-exporter:
     image: prom/node-exporter:latest
     deploy:
-      mode: global  # Lancer une instance sur chaque nœud du cluster
+      mode: global  # Une instance sur chaque nœud
       restart_policy:
         condition: on-failure
-      placement:
-        constraints: []  # Disponible sur tous les nœuds, managers et workers
-      command:
-        - '--path.rootfs=/host'  # Nécessaire pour surveiller l'hôte Docker
-    volumes:
-      - /proc:/host/proc:ro  # Accès aux métriques système
-      - /sys:/host/sys:ro    # Accès aux informations système
-      - /:/host:ro           # Accès au système de fichiers de l’hôte
     ports:
-      - "9100:9100" # Port pour exporter les métriques
+      - target: 9100
+        published: 9100
+        protocol: tcp
+        mode: host  # Exposition directe sur l'hôte
+    command:
+      - '--path.rootfs=/host'  # Collecter les métriques système
+    volumes:
+      - /proc:/host/proc:ro  # Statistiques système
+      - /sys:/host/sys:ro    # Informations sur le matériel
+      - /:/host:ro           # Accès au système de fichiers
     networks:
       - monitoring
 
@@ -42,7 +45,5 @@ volumes:
 networks:
   monitoring:
     driver: overlay
-
-
 
 
