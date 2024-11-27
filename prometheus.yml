@@ -1,3 +1,5 @@
+# Configuration prometheus pour découverte node-exporter auto dans le swarm
+
 global:
   scrape_interval: 15s # Fréquence d'interrogation des endpoints (15 secondes par défaut)
   evaluation_interval: 15s # Fréquence d'évaluation des règles
@@ -24,8 +26,13 @@ scrape_configs:
 
   # Exemple pour un serveur Node Exporter
   - job_name: "node_exporter"
-    static_configs:
-      - targets: ["node-exporter:9100"]
+    dns_sd_configs:
+        - names:
+            - 'tasks.node-exporter'
+          type: 'A'
+          port: 9100
+
+      #     - targets: ["node-exporter:9100"]
 
   # Exemple pour un Docker Swarm service
   - job_name: "docker"
@@ -34,5 +41,6 @@ scrape_configs:
           - "tasks.prometheus" # DNS des tâches Docker Swarm
         type: A
         port: 9090
+
 
 
