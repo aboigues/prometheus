@@ -1,3 +1,4 @@
+version: "3.8"
 
 services:
   prometheus:
@@ -15,8 +16,33 @@ services:
       - prometheus_data:/prometheus
       - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
 
+  node-exporter:
+    image: prom/node-exporter:latest
+    deploy:
+      mode: global  # Lancer une instance sur chaque nœud du cluster
+      restart_policy:
+        condition: on-failure
+      placement:
+        constraints: []  # Disponible sur tous les nœuds, managers et workers
+      command:
+        - '--path.rootfs=/host'  # Nécessaire pour surveiller l'hôte Docker
+    volumes:
+      - /proc:/host/proc:ro  # Accès aux métriques système
+      - /sys:/host/sys:ro    # Accès aux informations système
+      - /:/host:ro           # Accès au système de fichiers de l’hôte
+    ports:
+      - "9100:9100" # Port pour exporter les métriques
+    networks:
+      - monitoring
+
 volumes:
   prometheus_data:
     driver: local
+
+networks:
+  monitoring:
+    driver: overlay
+
+
 
 
