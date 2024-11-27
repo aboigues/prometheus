@@ -1,0 +1,38 @@
+global:
+  scrape_interval: 15s # Fréquence d'interrogation des endpoints (15 secondes par défaut)
+  evaluation_interval: 15s # Fréquence d'évaluation des règles
+
+  # Définit un timeout pour les scrapes
+  scrape_timeout: 10s 
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: 
+            - "alertmanager:9093" # Exemple si Alertmanager est utilisé (optionnel)
+
+rule_files:
+  # Ajoute ici les fichiers contenant des règles d'alerte
+  # Exemple :
+  # - "alert_rules.yml"
+
+scrape_configs:
+  # Scraper le propre endpoint de Prometheus
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  # Exemple pour un serveur Node Exporter
+  - job_name: "node_exporter"
+    static_configs:
+      - targets: ["node-exporter:9100"]
+
+  # Exemple pour un Docker Swarm service
+  - job_name: "docker"
+    dns_sd_configs:
+      - names:
+          - "tasks.prometheus" # DNS des tâches Docker Swarm
+        type: A
+        port: 9090
+
+
